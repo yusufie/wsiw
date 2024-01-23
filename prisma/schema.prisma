@@ -1,0 +1,266 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider  = "postgresql"
+    url       = env("DATABASE_URL") // uses connection pooling
+    directUrl = env("DIRECT_URL") // uses a direct connection
+}
+
+model AvailablePlatform {
+    platform_name String @unique
+    // Add other fields if needed
+
+    @@id([platform_name])
+}
+
+model Actor {
+    id                   String   @id @default(cuid())
+    name                 String
+    birth_date           DateTime
+    biography            String
+    profile_picture_link String
+    // Add other fields if needed
+
+    @@index([name], name: "Actor_name")
+}
+
+model Director {
+    id                   String   @id @default(cuid())
+    name                 String
+    birth_date           DateTime
+    biography            String
+    profile_picture_link String
+    // Add other fields if needed
+
+    @@index([name], name: "Director_name")
+}
+
+model Movie {
+    id               String            @id @default(cuid())
+    name             String
+    description      String
+    IMDB             Float
+    release_year     Int
+    cover_image_link String
+    trailer_link     String
+    // Add other fields if needed
+    WatchLogs        WatchLogs[]
+    FeedbackLogs     FeedbackLogs[]
+    PerformanceLogs  PerformanceLogs[]
+    UsageLogs        UsageLogs[]
+    FavoriteList     FavoriteList[]
+    PromptHistory    PromptHistory[]
+
+    @@index([name], name: "Movie_name")
+}
+
+model FavoriteList {
+    id      String   @id @default(cuid())
+    user_id String
+    movies  Movie[]
+    date    DateTime
+    // Add other fields if needed
+    User    User     @relation(fields: [user_id], references: [id])
+}
+
+model PromptHistory {
+    id        String   @id @default(cuid())
+    user_id   String
+    prompt    String
+    timestamp DateTime
+    movies    Movie[]
+    // Add other fields if needed
+    User      User     @relation(fields: [user_id], references: [id])
+}
+
+model WatchLogs {
+    id        String   @id @default(cuid())
+    user_id   String
+    movie_id  String
+    timestamp DateTime
+    // Add other fields if needed
+    User      User     @relation(fields: [user_id], references: [id])
+    Movie     Movie    @relation(fields: [movie_id], references: [id])
+}
+
+model FeedbackLogs {
+    id       String @id @default(cuid())
+    user_id  String
+    movie_id String
+    feedback String
+    // Add other fields if needed
+    User     User   @relation(fields: [user_id], references: [id])
+    Movie    Movie  @relation(fields: [movie_id], references: [id])
+}
+
+model LoginLogs {
+    id        String   @id @default(cuid())
+    user_id   String
+    timestamp DateTime
+    // Add other fields if needed
+    User      User     @relation(fields: [user_id], references: [id])
+}
+
+model ActivityLogs {
+    id               String   @id @default(cuid())
+    user_id          String
+    feature_used     String
+    duration_seconds Int
+    timestamp        DateTime
+    // Add other fields if needed
+    User             User     @relation(fields: [user_id], references: [id])
+}
+
+model ErrorLogs {
+    id        String      @id @default(cuid())
+    log_type  ERROR_TYPES
+    log_data  Json
+    timestamp DateTime
+}
+
+model PerformanceLogs {
+    id        String   @id @default(cuid())
+    movie_id  String
+    user_id   String
+    timestamp DateTime
+    // Add other fields if needed
+    Movie     Movie    @relation(fields: [movie_id], references: [id])
+    User      User     @relation(fields: [user_id], references: [id])
+}
+
+model RecommendationLogs {
+    id                 String   @id @default(cuid())
+    user_id            String
+    recommended_movies String[]
+    timestamp          DateTime
+    // Add other fields if needed
+    User               User     @relation(fields: [user_id], references: [id])
+}
+
+model UsageLogs {
+    id               String   @id @default(cuid())
+    user_id          String
+    movie_id         String
+    feature_used     String
+    duration_seconds Int
+    timestamp        DateTime
+    // Add other fields if needed
+    User             User     @relation(fields: [user_id], references: [id])
+    Movie            Movie    @relation(fields: [movie_id], references: [id])
+}
+
+model Account {
+    id                String   @id @default(cuid())
+    userId            String
+    type              String
+    provider          String
+    providerAccountId String
+    refresh_token     String?  @db.Text
+    access_token      String?  @db.Text
+    expires_at        Int?
+    token_type        String?
+    scope             String?
+    id_token          String?  @db.Text
+    session_state     String?
+    createdAt         DateTime @default(now())
+    updatedAt         DateTime @default(now()) @updatedAt
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@unique([provider, providerAccountId])
+}
+
+model Session {
+    id           String   @id @default(cuid())
+    sessionToken String   @unique
+    userId       String
+    expires      DateTime
+    user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+    identifier String
+    token      String   @unique
+    expires    DateTime
+
+    @@unique([identifier, token])
+}
+
+model User {
+    id            String    @id @default(cuid())
+    name          String?
+    email         String?   @unique
+    emailVerified DateTime?
+    image         String?
+    createdAt     DateTime  @default(now())
+    updatedAt     DateTime  @default(now()) @updatedAt
+
+    // Add other fields if needed
+    FavoriteList       FavoriteList[]
+    PromptHistory      PromptHistory[]
+    UsageLogs          UsageLogs[]
+    LoginLogs          LoginLogs[]
+    WatchLogs          WatchLogs[]
+    FeedbackLogs       FeedbackLogs[]
+    ActivityLogs       ActivityLogs[]
+    PerformanceLogs    PerformanceLogs[]
+    RecommendationLogs RecommendationLogs[]
+    Person             Person?
+    Account            Account[]
+    Session            Session[]
+
+    @@index([email], name: "User_email")
+}
+
+model Person {
+    user_id              String @unique
+    favorite_color       String
+    country              String
+    birth_date_year      Int
+    city                 String
+    hobby                String
+    favorite_movie       String
+    hated_movie          String
+    gender               String
+    cultural_background  String
+    job                  String
+    relation_status      String
+    favorite_music_genre String
+    favorite_book        String
+    favorite_game        String
+    preferred_platform   String
+    preferred_device     String
+    // Add other fields if needed
+    User                 User   @relation(fields: [user_id], references: [id])
+
+    @@id([user_id])
+}
+
+enum ERROR_TYPES {
+    CLIENT_ERROR
+    SERVER_ERROR
+    DATABASE_ERROR
+    AUTHENTICATION_ERROR
+    AUTHORIZATION_ERROR
+    VALIDATION_ERROR
+    NOT_FOUND_ERROR
+    BAD_REQUEST_ERROR
+    CONFLICT_ERROR
+    UNAUTHORIZED_ERROR
+    FORBIDDEN_ERROR
+    INTERNAL_SERVER_ERROR
+    NOT_IMPLEMENTED_ERROR
+    SERVICE_UNAVAILABLE_ERROR
+    GATEWAY_TIMEOUT_ERROR
+    BAD_GATEWAY_ERROR
+    NETWORK_CONNECT_TIMEOUT_ERROR
+    NETWORK_CONNECT_ERROR
+    NETWORK_RECEIVE_TIMEOUT_ERROR
+    NETWORK_RECEIVE_ERROR
+    NETWORK_SEND_TIMEOUT_ERROR
+    NETWORK_SEND_ERROR
+    NETWORK_ERROR
+    UNKNOWN_ERROR
+}
